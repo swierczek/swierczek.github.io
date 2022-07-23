@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Whendle?</title>
+</head>
+<body>
+
+	<h1>When will _____ be the Wordle of the day?</h1>
+
+	<form mmethod="GET">
+		<input
+			type="text"
+			autocomplete="off"
+			name="word"
+			id="word"
+			placeholder="cigar"
+			minlength="5"
+			maxlength="5"
+			onkeyup="checkAnswer()"
+			disabled
+		/>
+	</form>
+
+	<h1 id="date"></h1>
+	<h4 id="last_date"></h4>
+	<h4 id="note"></h4>
+
+	<script>
+		const lastKnownWord = 'tryst';
+		const lastKnownDate = '2022-07-22';
+
+		const noteText = '*These dates are estimates because the word list changes occasionally.';
+
+		var wordEl = document.getElementById('word');
+		var dateEl = document.getElementById('date');
+		var lastDateEl = document.getElementById('last_date');
+		var noteEl = document.getElementById('note');
+
+		let params = new URLSearchParams(document.location.search);
+
+		if (params.get('word') !== null) {
+			wordEl.value = params.get('word');
+		}
+
+		var answers;
+		var guesses;
+
+		async function getWordList() {
+			let response = await fetch('https://weifgb2amntdbh5s3amxjogpfi0wkedp.lambda-url.us-east-1.on.aws/');
+			let text = await response.text(); // read response body as text
+
+			let json = JSON.parse(text);
+			answers = json['answers'];
+			guesses = json['guesses'];
+
+			wordEl.removeAttribute('disabled');
+			checkAnswer();
+		}
+
+		getWordList();
+
+		function checkAnswer() {
+			let word = wordEl.value;
+
+			if (word.length != 5) {
+				dateEl.innerText = '';
+				lastDateEl.innerText = '';
+				noteEl.innerText = '';
+
+				return;
+			}
+
+			// console.log(answers);
+			// console.log(guesses);
+
+			let lastKnownIndex = answers.indexOf(lastKnownWord);
+			let searchingForIndex = answers.indexOf(word);
+
+			if (lastKnownIndex === -1 || searchingForIndex === -1) {
+				dateEl.innerText = 'Word not found';
+				lastDateEl.innerText = '';
+				noteEl.innerText = '';
+
+				let guessIndex = guesses.indexOf(word);
+
+				if (guessIndex !== -1) {
+					dateEl.innerText = 'Never!';
+				}
+
+				return;
+			}
+
+			// console.log(lastKnownIndex);
+			// console.log(searchingForIndex);
+
+			let dateDiff = searchingForIndex - lastKnownIndex;
+
+			if (dateDiff < 0) {
+				let prevDate = new Date(lastKnownDate);
+				let prevResult = prevDate.setDate(prevDate.getDate() + dateDiff + 1);
+
+				lastDateEl.innerText = 'Previous date: ' + (new Date(prevResult)).toDateString()
+
+				dateDiff += answers.length;
+			}
+
+			let nextDate = new Date(lastKnownDate);
+			let nextResult = nextDate.setDate(nextDate.getDate() + dateDiff + 1);
+
+			dateEl.innerText = 'Next date: ' + (new Date(nextResult)).toDateString();
+			noteEl.innerText = noteText;
+		}
+
+		// needed apparently cuz await is setting the global var
+		setTimeout(() => console.log(answers), 0);
+
+		</script>
+</body>
+</html>
