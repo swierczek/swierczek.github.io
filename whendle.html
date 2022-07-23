@@ -4,34 +4,57 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Whendle?</title>
+	<style>
+		form > * {
+			text-align: center;
+		}
+		form input {
+			font-family: monospace;
+			display: inline-block;
+			width: 95px;
+			height: 30px;
+			font-size: 30px;
+			border-top: none;
+			border-right: none;
+			border-left: none;
+			color: red;
+		}
+		h3 {
+			font-size: 16px;
+			color: #666;
+		}
+	</style>
 </head>
 <body>
 
-	<h1>When will _____ be the Wordle of the day?</h1>
-
 	<form mmethod="GET">
-		<input
-			type="text"
-			autocomplete="off"
-			name="word"
-			id="word"
-			placeholder="cigar"
-			minlength="5"
-			maxlength="5"
-			onkeyup="checkAnswer()"
-			disabled
-		/>
-	</form>
+		<h1>
+			When will
+			<input
+				type="text"
+				autocomplete="off"
+				name="word"
+				id="word"
+				placeholder="cigar"
+				minlength="5"
+				maxlength="5"
+				onkeyup="checkAnswer()"
+				disabled
+			/>
+			be the Wordle of the day?
+		</h1>
 
-	<h1 id="date"></h1>
-	<h4 id="last_date"></h4>
-	<h4 id="note"></h4>
+		<h2 id="date"></h1>
+		<h2 id="last_date"></h2>
+		<h3 id="note"></h3>
+
+	</form>
 
 	<script>
 		const lastKnownWord = 'tryst';
 		const lastKnownDate = '2022-07-22';
 
-		const noteText = '*These dates are estimates because the word list changes occasionally.';
+		const noteText = '*These dates are estimates and subject to change because the word list changes occasionally.';
 
 		var wordEl = document.getElementById('word');
 		var dateEl = document.getElementById('date');
@@ -62,7 +85,7 @@
 		getWordList();
 
 		function checkAnswer() {
-			let word = wordEl.value;
+			let word = wordEl.value.toLowerCase();
 
 			if (word.length != 5) {
 				dateEl.innerText = '';
@@ -97,7 +120,7 @@
 
 			let dateDiff = searchingForIndex - lastKnownIndex;
 
-			if (dateDiff < 0) {
+			if (dateDiff < 1) {
 				let prevDate = new Date(lastKnownDate);
 				let prevResult = prevDate.setDate(prevDate.getDate() + dateDiff + 1);
 
