@@ -56,19 +56,21 @@
 
 		const noteText = '*These dates are estimates and subject to change because the word list changes occasionally.';
 
+		// these get populated asynchronously
+		var answers;
+		var guesses;
+
 		var wordEl = document.getElementById('word');
 		var dateEl = document.getElementById('date');
 		var lastDateEl = document.getElementById('last_date');
 		var noteEl = document.getElementById('note');
 
 		let params = new URLSearchParams(document.location.search);
+		var wordParam = params.get('word');
 
-		if (params.get('word') !== null) {
-			wordEl.value = params.get('word');
+		if (wordParam !== null) {
+			wordEl.value = wordParam;
 		}
-
-		var answers;
-		var guesses;
 
 		async function getWordList() {
 			let response = await fetch('https://weifgb2amntdbh5s3amxjogpfi0wkedp.lambda-url.us-east-1.on.aws/');
@@ -79,6 +81,11 @@
 			guesses = json['guesses'];
 
 			wordEl.removeAttribute('disabled');
+
+			if (wordParam === null) {
+				wordEl.focus();
+			}
+
 			checkAnswer();
 		}
 
@@ -102,14 +109,14 @@
 			let searchingForIndex = answers.indexOf(word);
 
 			if (lastKnownIndex === -1 || searchingForIndex === -1) {
-				dateEl.innerText = 'Word not found';
+				dateEl.innerText = 'Never! Word not found.';
 				lastDateEl.innerText = '';
 				noteEl.innerText = '';
 
 				let guessIndex = guesses.indexOf(word);
 
 				if (guessIndex !== -1) {
-					dateEl.innerText = 'Never!';
+					dateEl.innerText = 'Never! Word not found in answer list.';
 				}
 
 				return;
@@ -124,7 +131,7 @@
 				let prevDate = new Date(lastKnownDate);
 				let prevResult = prevDate.setDate(prevDate.getDate() + dateDiff + 1);
 
-				lastDateEl.innerText = 'Previous date: ' + (new Date(prevResult)).toDateString()
+				lastDateEl.innerText = 'Previous: ' + formatDate(prevResult);
 
 				dateDiff += answers.length;
 			}
@@ -132,8 +139,14 @@
 			let nextDate = new Date(lastKnownDate);
 			let nextResult = nextDate.setDate(nextDate.getDate() + dateDiff + 1);
 
-			dateEl.innerText = 'Next date: ' + (new Date(nextResult)).toDateString();
+			dateEl.innerText = 'Next: ' + formatDate(nextResult);
 			noteEl.innerText = noteText;
+		}
+
+		function formatDate(date) {
+			let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+			return (new Date(date)).toLocaleDateString(undefined, options);
 		}
 
 		// needed apparently cuz await is setting the global var
