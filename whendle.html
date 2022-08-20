@@ -55,8 +55,8 @@
 	</form>
 
 	<script>
-		const lastKnownWord = 'tryst';
-		const lastKnownDate = '2022-07-22';
+		const lastKnownWord = 'treat';
+		const lastKnownDate = '2022-08-20';
 
 		const noteText = '*These dates are estimates and subject to change because the word list changes occasionally.';
 
@@ -77,6 +77,8 @@
 		}
 
 		async function getWordList() {
+			// need to edit the Lambda function > Configuration > Function URL - to either allow https://swierczek.github.io or *
+			// https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/whendle/edit/function-url?tab=configure
 			let response = await fetch('https://weifgb2amntdbh5s3amxjogpfi0wkedp.lambda-url.us-east-1.on.aws/');
 			let text = await response.text(); // read response body as text
 
@@ -110,9 +112,6 @@
 				return;
 			}
 
-			// console.log(answers);
-			// console.log(guesses);
-
 			let lastKnownIndex = answers.indexOf(lastKnownWord);
 			let searchingForIndex = answers.indexOf(word);
 
@@ -130,22 +129,24 @@
 				return;
 			}
 
-			// console.log(lastKnownIndex);
-			// console.log(searchingForIndex);
+			let indexDiff = searchingForIndex - lastKnownIndex;
 
-			let dateDiff = searchingForIndex - lastKnownIndex;
+			let foundDate = new Date(lastKnownDate);
+			foundDate.setDate(foundDate.getDate() + indexDiff + 1);
 
-			if (dateDiff < 1) {
-				let prevDate = new Date(lastKnownDate);
-				let prevResult = prevDate.setDate(prevDate.getDate() + dateDiff + 1);
+			let today = new Date();
 
-				lastDateEl.innerText = 'Previous: ' + formatDate(prevResult);
+			while (foundDate < today) {
+				lastDateEl.innerText = 'Previous: ' + formatDate(foundDate);
 
-				dateDiff += answers.length;
+				indexDiff += answers.length;
+
+				foundDate = new Date(lastKnownDate);
+				foundDate.setDate(foundDate.getDate() + indexDiff + 1);
 			}
 
 			let nextDate = new Date(lastKnownDate);
-			let nextResult = nextDate.setDate(nextDate.getDate() + dateDiff + 1);
+			let nextResult = nextDate.setDate(nextDate.getDate() + indexDiff + 1);
 
 			dateEl.innerText = 'Next: ' + formatDate(nextResult);
 			noteEl.innerText = noteText;
